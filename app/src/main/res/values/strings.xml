@@ -1,0 +1,13 @@
+<resources>
+
+    <string name="app_name">ARClever</string>
+
+    <!-- ARFragment.kt -->
+    <string name="exception_declined_installation">Please install ARCore</string>
+    <string name="exception_not_installed">Please install ARCore</string>
+    <string name="exception_update_ar_core">Please update ARCore</string>
+    <string name="exception_update_app">Please update this app</string>
+    <string name="exception_not_supported">This device does not support AR</string>
+    <string name="exception_failed_session">Failed to create AR session</string>
+
+</resources>
