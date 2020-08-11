@@ -1,11 +1,10 @@
 package com.mancel.yann.arclever.views.fragments
 
-import com.google.ar.core.ArCoreApk
-import com.google.ar.core.CameraConfig
-import com.google.ar.core.CameraConfigFilter
-import com.google.ar.core.Session
+import android.opengl.GLSurfaceView
+import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
 import com.mancel.yann.arclever.R
+import com.mancel.yann.arclever.opengl.ARCleverRenderer
 import com.mancel.yann.arclever.utils.MessageTools
 import kotlinx.android.synthetic.main.fragment_a_r.view.*
 import java.util.*
@@ -21,9 +20,9 @@ class ARFragment : BaseFragment() {
 
     // FIELDS --------------------------------------------------------------------------------------
 
-    private var _session: Session? = null
+    private val _renderer: GLSurfaceView.Renderer = ARCleverRenderer()
 
-    // Set to true ensures requestInstall() triggers installation if necessary
+    private var _session: Session? = null
     private var _userRequestedInstall = true
 
     // METHODS -------------------------------------------------------------------------------------
@@ -32,11 +31,29 @@ class ARFragment : BaseFragment() {
 
     override fun getFragmentLayout(): Int = R.layout.fragment_a_r
 
-    override fun configureDesign() { /* Do nothing here */ }
+    override fun configureDesign() = this.configureSurfaceViewFromOpenGL()
 
     override fun doOnResume() = this.configureCamera()
 
     override fun actionAfterPermission() = this.configureCamera()
+
+    // -- SurfaceView --
+
+    /**
+     * Configures a SurfaceView from OpenGL
+     */
+    private fun configureSurfaceViewFromOpenGL() {
+        with(this._rootView.fragment_ar_surface_view) {
+            // Create an OpenGL ES 2.0 context
+            setEGLContextClientVersion(2)
+
+            // Set the Renderer for drawing on the GLSurfaceView
+            setRenderer(this@ARFragment._renderer)
+
+            // Render the view only when there is a change in the drawing data
+            renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        }
+    }
 
     // -- Camera --
 
@@ -59,6 +76,8 @@ class ARFragment : BaseFragment() {
 
         // Make sure Google Play Services for AR is installed and up to date.
         try {
+            // Enable ARCore
+            // See: https://developers.google.com/ar/develop/java/enable-arcore
             if (this._session == null) {
                 val installStatus = ArCoreApk.getInstance()
                     .requestInstall(this.requireActivity(), this._userRequestedInstall)
@@ -106,6 +125,10 @@ class ARFragment : BaseFragment() {
             return
         }
 
+        // -----------------------------------------------------------------------------------------
+        // Camera configs - https://developers.google.com/ar/develop/java/camera-configs
+        // -----------------------------------------------------------------------------------------
+
         // Create a camera config filter for the session.
         val filter = CameraConfigFilter(this._session)
 
@@ -125,5 +148,19 @@ class ARFragment : BaseFragment() {
         // it contains the camera config that best matches the specified filter
         // settings.
         this._session?.cameraConfig = cameraConfigList[0]
+
+
+
+        // Check if Depth API is supported
+        // See: https://developers.google.com/ar/develop/java/depth/developer-guide
+        val config = this._session!!.config
+
+        // Check whether the user's device supports the Depth API.
+        val isDepthSupported = this._session!!.isDepthModeSupported(Config.DepthMode.AUTOMATIC)
+        if (isDepthSupported) {
+            config.depthMode = Config.DepthMode.AUTOMATIC
+        }
+
+        this._session!!.configure(config)
     }
 }
