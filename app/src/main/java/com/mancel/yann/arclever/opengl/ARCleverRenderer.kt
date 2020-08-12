@@ -24,7 +24,7 @@ class ARCleverRenderer : GLSurfaceView.Renderer {
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         // Set the background frame color
-        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
+        GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f)
 
         // initialize a triangle
         this._triangle = Triangle()

@@ -37,14 +37,19 @@ abstract class BaseFragment : Fragment() {
     protected abstract fun getFragmentLayout(): Int
 
     /**
-     * Configures the design of each daughter class
+     * Calls this method on [Fragment]#onCreateView method
      */
-    protected abstract fun configureDesign()
+    protected abstract fun doOnCreateView()
 
     /**
      * Calls this method on [Fragment]#onResume method
      */
     protected abstract fun doOnResume()
+
+    /**
+     * Calls this method on [Fragment]#onPause method
+     */
+    protected abstract fun doOnPause()
 
     // -- Fragment --
 
@@ -56,7 +61,7 @@ abstract class BaseFragment : Fragment() {
         // Inflate the layout for this fragment
         this._rootView = inflater.inflate(this.getFragmentLayout(), container, false)
 
-        this.configureDesign()
+        this.doOnCreateView()
 
         return this._rootView
     }
@@ -64,6 +69,11 @@ abstract class BaseFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         this.doOnResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        this.doOnPause()
     }
 
     override fun onRequestPermissionsResult(

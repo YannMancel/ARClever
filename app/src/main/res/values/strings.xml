@@ -9,5 +9,6 @@
     <string name="exception_update_app">Please update this app</string>
     <string name="exception_not_supported">This device does not support AR</string>
     <string name="exception_failed_session">Failed to create AR session</string>
+    <string name="exception_camera_not_available">Camera not available. Try restarting the app.</string>
 
 </resources>

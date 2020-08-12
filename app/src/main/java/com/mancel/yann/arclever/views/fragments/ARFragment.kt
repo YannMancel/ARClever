@@ -7,7 +7,6 @@ import com.mancel.yann.arclever.R
 import com.mancel.yann.arclever.opengl.ARCleverRenderer
 import com.mancel.yann.arclever.utils.MessageTools
 import kotlinx.android.synthetic.main.fragment_a_r.view.*
-import java.util.*
 
 /**
  * Created by Yann MANCEL on 08/08/2020.
@@ -31,9 +30,11 @@ class ARFragment : BaseFragment() {
 
     override fun getFragmentLayout(): Int = R.layout.fragment_a_r
 
-    override fun configureDesign() = this.configureSurfaceViewFromOpenGL()
+    override fun doOnCreateView() = this.configureSurfaceViewFromOpenGL()
 
     override fun doOnResume() = this.configureCamera()
+
+    override fun doOnPause() = this.managePauseOfAR()
 
     override fun actionAfterPermission() = this.configureCamera()
 
@@ -43,15 +44,25 @@ class ARFragment : BaseFragment() {
      * Configures a SurfaceView from OpenGL
      */
     private fun configureSurfaceViewFromOpenGL() {
+        // Set up renderer
         with(this._rootView.fragment_ar_surface_view) {
+            // Manage Context on pause
+            preserveEGLContextOnPause = true
+
             // Create an OpenGL ES 2.0 context
             setEGLContextClientVersion(2)
+
+            // Alpha used for plane blending.
+            setEGLConfigChooser(8, 8, 8, 8, 16, 0)
 
             // Set the Renderer for drawing on the GLSurfaceView
             setRenderer(this@ARFragment._renderer)
 
-            // Render the view only when there is a change in the drawing data
-            renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+            // The renderer is called continuously to re-render the scene
+            renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+
+            // Optimisation
+            setWillNotDraw(false)
         }
     }
 
@@ -62,16 +73,16 @@ class ARFragment : BaseFragment() {
      */
     private fun configureCamera() {
         if (this.hasCameraPermission()) {
-            this.manageGooglePlayServicesForAR()
+            this.setupSessionOfAR()
         }
     }
 
-    // -- Google Play Services for AR --
+    // -- AR Core --
 
     /**
-     * Manages the Google Play Services for AR
+     * Setups the [Session] of AR
      */
-    private fun manageGooglePlayServicesForAR() {
+    private fun setupSessionOfAR() {
         var message: String? = null
 
         // Make sure Google Play Services for AR is installed and up to date.
@@ -88,7 +99,7 @@ class ARFragment : BaseFragment() {
                         this._session = Session(this.requireContext())
                     }
 
-                    ArCoreApk.InstallStatus.INSTALL_REQUESTED, null  -> {
+                    ArCoreApk.InstallStatus.INSTALL_REQUESTED, null -> {
                         // The current activity pauses and the user is prompted to install
                         // or update Google Play Services for AR.
 
@@ -125,42 +136,63 @@ class ARFragment : BaseFragment() {
             return
         }
 
-        // -----------------------------------------------------------------------------------------
-        // Camera configs - https://developers.google.com/ar/develop/java/camera-configs
-        // -----------------------------------------------------------------------------------------
+        // Manages the Depth API of AR
+        this.manageDepthAPIOfAR()
 
-        // Create a camera config filter for the session.
-        val filter = CameraConfigFilter(this._session)
+        // Manages the resume of AR
+        this.manageResumeOfAR()
+    }
 
-        // Return only camera configs that target 30 fps camera capture frame rate.
-        filter.targetFps = EnumSet.of(CameraConfig.TargetFps.TARGET_FPS_30)
-
-        // Return only camera configs that will not use the depth sensor.
-        filter.depthSensorUsage = EnumSet.of(CameraConfig.DepthSensorUsage.DO_NOT_USE)
-
-        // Get list of configs that match filter settings.
-        // In this case, this list is guaranteed to contain at least one element,
-        // because both TargetFps.TARGET_FPS_30 and DepthSensorUsage.DO_NOT_USE
-        // are supported on all ARCore supported devices.
-        val cameraConfigList = this._session!!.getSupportedCameraConfigs(filter)
-
-        // Use element 0 from the list of returned camera configs. This is because
-        // it contains the camera config that best matches the specified filter
-        // settings.
-        this._session?.cameraConfig = cameraConfigList[0]
-
-
-
-        // Check if Depth API is supported
-        // See: https://developers.google.com/ar/develop/java/depth/developer-guide
-        val config = this._session!!.config
-
-        // Check whether the user's device supports the Depth API.
-        val isDepthSupported = this._session!!.isDepthModeSupported(Config.DepthMode.AUTOMATIC)
-        if (isDepthSupported) {
-            config.depthMode = Config.DepthMode.AUTOMATIC
+    /**
+     * Manages the Depth API of AR
+     */
+    private fun manageDepthAPIOfAR() {
+        this._session?.let { session ->
+            // Check if Depth API is supported
+            val config = session.config.also {
+                // Check whether the user's device supports the Depth API.
+                it.depthMode =
+                    if (session.isDepthModeSupported(Config.DepthMode.AUTOMATIC))
+                        Config.DepthMode.AUTOMATIC
+                    else
+                        Config.DepthMode.DISABLED
+            }
+            session.configure(config)
         }
+    }
 
-        this._session!!.configure(config)
+    /**
+     * Manages the resume of AR
+     */
+    private fun manageResumeOfAR() {
+        this._session?.let { session ->
+            // Note that order matters - see the note in manageClosureOfAR method in onPause(),
+            // the reverse applies here.
+            try {
+                session.resume()
+            } catch (e: CameraNotAvailableException) {
+                MessageTools.showMessageWithSnackbar(
+                    this._rootView.fragment_a_r_root,
+                    this.getString(R.string.exception_camera_not_available)
+                )
+                this._session = null
+                return
+            }
+
+            this._rootView.fragment_ar_surface_view.onResume()
+        }
+    }
+
+    /**
+     * Manages the pause of AR
+     */
+    private fun managePauseOfAR() {
+        this._session?.let { session ->
+            // Note that the order matters - GLSurfaceView is paused first so that it does not try
+            // to query the session. If Session is paused before GLSurfaceView, GLSurfaceView may
+            // still call session.update() and get a SessionPausedException.
+            this._rootView.fragment_ar_surface_view.onPause()
+            session.pause()
+        }
     }
 }
