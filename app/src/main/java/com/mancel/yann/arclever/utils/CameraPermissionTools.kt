@@ -19,7 +19,7 @@ object CameraPermissionTools {
 
     // METHODS -------------------------------------------------------------------------------------
 
-    /** Checks the permission: CAMERA */
+    /** Checks the permission: [Manifest.permission.CAMERA] */
     fun hasCameraPermission(fragment: Fragment): Boolean {
         val permissionResult = ContextCompat.checkSelfPermission(
             fragment.requireContext(),
@@ -28,7 +28,7 @@ object CameraPermissionTools {
         return permissionResult == PackageManager.PERMISSION_GRANTED
     }
 
-    /** Requests the permission: CAMERA */
+    /** Requests the permission: [Manifest.permission.CAMERA] */
     fun requestCameraPermission(fragment: Fragment) {
         fragment.requestPermissions(
             arrayOf(CAMERA_PERMISSION),

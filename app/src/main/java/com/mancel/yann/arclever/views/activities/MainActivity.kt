@@ -6,6 +6,7 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import com.mancel.yann.arclever.R
+import com.mancel.yann.arclever.utils.FullScreenTools
 
 /**
  * Created by Yann MANCEL on 08/08/2020.
@@ -34,6 +35,11 @@ class MainActivity : BaseActivity() {
     override fun onSupportNavigateUp(): Boolean {
         return this._navController.navigateUp(this._appBarConfiguration)
                 || super.onSupportNavigateUp()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) FullScreenTools.hideSystemUI(this@MainActivity)
     }
 
     // -- Action bar --

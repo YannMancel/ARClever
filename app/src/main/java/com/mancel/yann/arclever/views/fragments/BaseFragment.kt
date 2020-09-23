@@ -26,13 +26,13 @@ abstract class BaseFragment : Fragment() {
     @LayoutRes
     protected abstract fun getFragmentLayout(): Int
 
-    /** Calls this method by [Fragment]#onCreateView(LayoutInflater, ViewGroup?, Bundle?) call */
+    /** Calls this method by [Fragment.onCreateView] call */
     protected abstract fun doOnCreateView()
 
-    /** Calls this method by [Fragment]#onResume() call */
+    /** Calls this method by [Fragment.onResume] call */
     protected abstract fun doOnResume()
 
-    /** Calls this method by [Fragment]#onPause() call */
+    /** Calls this method by [Fragment.onPause] call */
     protected abstract fun doOnPause()
 
     // -- Fragment --

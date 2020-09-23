@@ -19,7 +19,7 @@ abstract class BaseActivity : AppCompatActivity() {
     @LayoutRes
     protected abstract fun getActivityLayout(): Int
 
-    /** Calls this method by [AppCompatActivity]#onCreate(Bundle?) call */
+    /** Calls this method by [AppCompatActivity.onCreate] call */
     protected abstract fun doOnCreate()
 
     // -- AppCompatActivity --

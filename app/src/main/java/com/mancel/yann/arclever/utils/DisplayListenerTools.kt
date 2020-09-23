@@ -5,6 +5,7 @@ import android.hardware.camera2.CameraManager
 import android.hardware.display.DisplayManager
 import android.view.Display
 import android.view.WindowManager
+import androidx.fragment.app.Fragment
 import com.google.ar.core.Session
 
 /**
@@ -49,22 +50,22 @@ class DisplayListenerTools(
 
     // -- Lifecycle --
 
-    /** Registers the display listener. Should be called from Fragment#onResume() method */
+    /** Registers the display listener. Should be called from [Fragment.onResume] call */
     fun onResume() {
         this._displayManager.registerDisplayListener(this@DisplayListenerTools, null)
     }
 
-    /** Unregisters the display listener. Should be called from Fragment#onPause() method */
+    /** Unregisters the display listener. Should be called from [Fragment.onPause] call */
     fun onPause() {
         this._displayManager.unregisterDisplayListener(this@DisplayListenerTools)
     }
 
-    // -- --
+    // -- Display Update --
 
     /**
      * Records a change in surface dimensions.
-     * This will be later used by [DisplayListenerTools]#updateSessionIfNeeded(Session) call.
-     * Should be called from [android.opengl.GLSurfaceView.Renderer]#onSurfaceChanged(GL10?, Int, Int) call.
+     * This will be later used by [DisplayListenerTools.updateSessionIfNeeded] call.
+     * Should be called from [android.opengl.GLSurfaceView.Renderer.onSurfaceChanged] call.
      * @param width the updated width of the surface.
      * @param height the updated height of the surface.
      */
@@ -76,9 +77,9 @@ class DisplayListenerTools(
 
     /**
      * Updates the session display geometry if a change was posted either by
-     * [DisplayListenerTools]#onSurfaceChanged(Int, Int) call or by
-     * [DisplayListenerTools]#onDisplayChanged(Int) system callback.
-     * This function should be called explicitly before each call to [Session]#update().
+     * [DisplayListenerTools.onSurfaceChanged] call or by
+     * [DisplayListenerTools.onDisplayChanged] system callback.
+     * This function should be called explicitly before each call to [Session.update].
      * This function will also clear the 'pending update' (viewportChanged) flag.
      * @param session the [Session] object to update if display geometry changed.
      */
