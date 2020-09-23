@@ -5,6 +5,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.util.Log
 import com.google.ar.core.Config
+import com.google.ar.core.Plane
 import com.google.ar.core.Session
 import com.mancel.yann.arclever.utils.DisplayListenerTools
 import java.io.IOException
@@ -29,6 +30,7 @@ class ARCleverRenderer(
 
     private val _depthTexture = Texture()
     private val _backgroundRenderer = BackgroundRenderer()
+    private val _planeRenderer = PlaneRenderer()
 
     // METHODS -------------------------------------------------------------------------------------
 
@@ -44,6 +46,7 @@ class ARCleverRenderer(
             // Create the texture and pass it to ARCore session to be filled during update()
             this._depthTexture.createOnGlThread()
             this._backgroundRenderer.createOnGlThread(this._context, this._depthTexture._textureId)
+            this._planeRenderer.createOnGlThread(this._context)
         } catch (e: IOException) {
             Log.e(this.javaClass.simpleName, "Failed to read an asset file", e)
         }
@@ -111,6 +114,49 @@ class ARCleverRenderer(
             // The last one is the average pixel intensity in gamma space.
             val colorCorrectionRgba = FloatArray(4)
             frame.lightEstimate.getColorCorrection(colorCorrectionRgba, 0)
+
+/*
+
+          // Visualize tracked points.
+          // Use try-with-resources to automatically release the point cloud.
+          try (PointCloud pointCloud = frame.acquirePointCloud()) {
+            pointCloudRenderer.update(pointCloud);
+            pointCloudRenderer.draw(viewmtx, projmtx);
+          }
+
+          // No tracking error at this point. If we detected any plane, then hide the
+          // message UI, otherwise show searchingPlane message.
+          if (hasTrackingPlane()) {
+            messageSnackbarHelper.hide(this);
+          } else {
+            messageSnackbarHelper.showMessage(this, SEARCHING_PLANE_MESSAGE);
+          }
+    */
+            // Visualize planes
+//            this._planeRenderer.drawPlanes(
+//                this._session!!.getAllTrackables(Plane.class),
+//                camera.getDisplayOrientedPose(),
+//                projectionMatrix
+//            )
+    /*
+          // Visualize anchors created by touch.
+          float scaleFactor = 1.0f;
+          virtualObject.setUseDepthForOcclusion(this, depthSettings.useDepthForOcclusion());
+          for (ColoredAnchor coloredAnchor : anchors) {
+            if (coloredAnchor.anchor.getTrackingState() != TrackingState.TRACKING) {
+              continue;
+            }
+            // Get the current pose of an Anchor in world space. The Anchor pose is updated
+            // during calls to session.update() as ARCore refines its estimate of the world.
+            coloredAnchor.anchor.getPose().toMatrix(anchorMatrix, 0);
+
+            // Update and draw the model and its shadow.
+            virtualObject.updateModelMatrix(anchorMatrix, scaleFactor);
+            virtualObject.draw(viewmtx, projmtx, colorCorrectionRgba, coloredAnchor.color);
+          }
+ */
+
+
         } catch ( t: Throwable) {
             // Avoid crashing the application due to unhandled exceptions.
             Log.e(this.javaClass.simpleName, "Exception on the OpenGL thread", t)

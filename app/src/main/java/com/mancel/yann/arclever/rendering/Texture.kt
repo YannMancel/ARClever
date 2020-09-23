@@ -31,6 +31,7 @@ class Texture {
     /**
      * Creates and initializes the texture. This method needs to be called on a thread with a EGL
      * context attached.
+     * @see [android.opengl.GLSurfaceView.Renderer.onSurfaceCreated]
      */
     fun createOnGlThread() {
         val textureIdArray = IntArray(1)
@@ -45,10 +46,10 @@ class Texture {
     }
 
     /**
-     * Updates the texture with the content from acquireDepthImage, which provides an image in DEPTH16
-     * format, representing each pixel as a depth measurement in millimeters. This method needs to be
-     * called on a thread with a EGL context attached.
-     * @param frame a [Frame]
+     * Updates the texture with the content from [Frame.acquireDepthImage],
+     * which provides an image in DEPTH16 format,
+     * representing each pixel as a depth measurement in millimeters.
+     * This method needs to be called on a thread with a EGL context attached.
      */
     fun updateWithDepthImageOnGlThread(frame: Frame) {
         try {
@@ -71,8 +72,8 @@ class Texture {
 
             depthImage.close()
         } catch (e: NotYetAvailableException) {
-            // This normally means that depth data is not available yet. This is normal so we will not
-            // spam the logcat with this.
+            // This normally means that depth data is not available yet.
+            // This is normal so we will not spam the logcat with this.
         }
     }
 }

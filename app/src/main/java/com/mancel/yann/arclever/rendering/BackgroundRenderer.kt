@@ -5,6 +5,7 @@ import android.opengl.GLES11Ext
 import android.opengl.GLES20
 import com.google.ar.core.Coordinates2d
 import com.google.ar.core.Frame
+import com.google.ar.core.Session
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -52,13 +53,15 @@ class BackgroundRenderer {
          * This quad will be drawn using GL_TRIANGLE_STRIP which draws two
          * triangles: v0->v1->v2, then v2->v1->v3.
          */
-        private val QUAD_COORDS = floatArrayOf(-1.0f, -1.0f, +1.0f, -1.0f, -1.0f, +1.0f, +1.0f, +1.0f)
+        private val QUAD_COORDS =
+            floatArrayOf(-1.0F, -1.0F, +1.0F, -1.0F, -1.0F, +1.0F, +1.0F, +1.0F)
         private const val COORDS_PER_VERTEX = 2
         private const val FLOAT_SIZE = 4
         private const val TEXCOORDS_PER_VERTEX = 2
 
         private const val CAMERA_VERTEX_SHADER_NAME = "shaders/screenquad.vert"
         private const val CAMERA_FRAGMENT_SHADER_NAME = "shaders/screenquad.frag"
+
         private const val DEPTH_VISUALIZER_VERTEX_SHADER_NAME =
             "shaders/background_show_depth_color_visualization.vert"
         private const val DEPTH_VISUALIZER_FRAGMENT_SHADER_NAME =
@@ -70,10 +73,9 @@ class BackgroundRenderer {
     // -- GlThread --
 
     /**
-     * Allocates and initializes OpenGL resources needed by the background renderer. Must be called on
-     * the OpenGL thread, typically in {@link GLSurfaceView.Renderer#onSurfaceCreated(GL10,
-     * EGLConfig)}.
-     *
+     * Allocates and initializes OpenGL resources needed by the background renderer.
+     * Must be called on the OpenGL thread,
+     * typically in [android.opengl.GLSurfaceView.Renderer.onSurfaceCreated].
      * @param context Needed to access shader source.
      * @param depthTextureId a [Int] that contains the texture Id
      */
@@ -183,13 +185,13 @@ class BackgroundRenderer {
     // -- Draw --
 
     /**
-     * Draws the AR background image. The image will be drawn such that virtual content rendered with
-     * the matrices provided by {@link com.google.ar.core.Camera#getViewMatrix(float[], int)} and
-     * {@link com.google.ar.core.Camera#getProjectionMatrix(float[], int, float, float)} will
-     * accurately follow static physical objects. This must be called <b>before</b> drawing virtual
-     * content.
-     *
-     * @param frame The current [Frame] as returned by Session#update().
+     * Draws the AR background image.
+     * The image will be drawn such that virtual content rendered with the matrices provided
+     * by [com.google.ar.core.Camera.getViewMatrix] and
+     * [com.google.ar.core.Camera.getProjectionMatrix]
+     * will accurately follow static physical objects.
+     * This must be called before drawing virtual content.
+     * @param frame The current [Frame] as returned by [Session.update].
      * @param debugShowDepthMap Toggles whether to show the live camera feed or latest depth image.
      */
     fun draw(frame: Frame, debugShowDepthMap: Boolean) {
@@ -213,8 +215,8 @@ class BackgroundRenderer {
     }
 
     /**
-     * Draws the camera background image using the currently configured {@link
-     * BackgroundRenderer#quadTexCoords} image texture coordinates.
+     * Draws the camera background image using the currently configured
+     * [BackgroundRenderer._quadTexCoords] image texture coordinates.
      */
     private fun draw(debugShowDepthMap: Boolean) {
         // Ensure position is rewound before use.
