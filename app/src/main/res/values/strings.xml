@@ -1,8 +1,9 @@
 <resources>
 
-    <string name="app_name">ARClever</string>
+    <string name="app_name" translatable="false">ARClever</string>
 
     <!-- ARFragment.kt -->
+    <string name="no_camera_permission">No camera permission</string>
     <string name="exception_declined_installation">Please install ARCore</string>
     <string name="exception_not_installed">Please install ARCore</string>
     <string name="exception_update_ar_core">Please update ARCore</string>

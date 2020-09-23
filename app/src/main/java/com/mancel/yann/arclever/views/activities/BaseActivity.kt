@@ -15,23 +15,18 @@ abstract class BaseActivity : AppCompatActivity() {
 
     // METHODS -------------------------------------------------------------------------------------
 
-    /**
-     * Gets the integer value of the activity layout
-     * @return an integer that corresponds to the activity layout
-     */
+    /** Gets the integer value of the activity layout */
     @LayoutRes
     protected abstract fun getActivityLayout(): Int
 
-    /**
-     * Configures the design of each daughter class
-     */
-    protected abstract fun configureDesign()
+    /** Calls this method by [AppCompatActivity]#onCreate(Bundle?) call */
+    protected abstract fun doOnCreate()
 
     // -- AppCompatActivity --
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.setContentView(this.getActivityLayout())
-        this.configureDesign()
+        this.doOnCreate()
     }
 }

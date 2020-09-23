@@ -10,13 +10,16 @@ import com.google.android.material.snackbar.Snackbar
  */
 object MessageTools {
 
-    /**
-     * Shows a [Snackbar] with a message
-     * @param view      a [View] that will display the message
-     * @param message   a [String] that contains the message to display
-     */
-    fun showMessageWithSnackbar(view: View, message: String) {
-        Snackbar.make(view, message, Snackbar.LENGTH_SHORT)
+    /** Shows a Snackbar with a message and an optional Button and its action on click */
+    fun showMessageWithSnackbar(
+        view: View,
+        message: String,
+        textButton: String? = null,
+        actionOnClick: View.OnClickListener? = null
+    ) {
+        Snackbar
+            .make(view, message, Snackbar.LENGTH_SHORT)
+            .setAction(textButton, actionOnClick)
             .show()
     }
 }

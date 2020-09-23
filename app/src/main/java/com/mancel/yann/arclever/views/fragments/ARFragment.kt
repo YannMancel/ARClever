@@ -1,12 +1,15 @@
 package com.mancel.yann.arclever.views.fragments
 
+import android.content.pm.PackageManager
 import android.opengl.GLSurfaceView
 import com.google.ar.core.*
 import com.google.ar.core.exceptions.*
 import com.mancel.yann.arclever.R
-import com.mancel.yann.arclever.opengl.ARCleverRenderer
+import com.mancel.yann.arclever.rendering.ARCleverRenderer
+import com.mancel.yann.arclever.utils.CameraPermissionTools
+import com.mancel.yann.arclever.utils.DisplayListenerTools
 import com.mancel.yann.arclever.utils.MessageTools
-import kotlinx.android.synthetic.main.fragment_a_r.view.*
+import kotlinx.android.synthetic.main.fragment_ar.view.*
 
 /**
  * Created by Yann MANCEL on 08/08/2020.
@@ -19,7 +22,8 @@ class ARFragment : BaseFragment() {
 
     // FIELDS --------------------------------------------------------------------------------------
 
-    private val _renderer: GLSurfaceView.Renderer = ARCleverRenderer()
+    private lateinit var _displayListener: DisplayListenerTools
+    private lateinit var _renderer: ARCleverRenderer
 
     private var _session: Session? = null
     private var _userRequestedInstall = true
@@ -28,7 +32,7 @@ class ARFragment : BaseFragment() {
 
     // -- BaseFragment --
 
-    override fun getFragmentLayout(): Int = R.layout.fragment_a_r
+    override fun getFragmentLayout(): Int = R.layout.fragment_ar
 
     override fun doOnCreateView() = this.configureSurfaceViewFromOpenGL()
 
@@ -36,15 +40,43 @@ class ARFragment : BaseFragment() {
 
     override fun doOnPause() = this.managePauseOfAR()
 
-    override fun actionAfterPermission() = this.configureCamera()
+    // -- Fragment --
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            // Access to the camera of device
+            CameraPermissionTools.REQUEST_CODE_PERMISSION_CAMERA -> {
+                if (grantResults.isNotEmpty() && grantResults.first() == PackageManager.PERMISSION_GRANTED)
+                    this.configureCamera()
+                else
+                    MessageTools.showMessageWithSnackbar(
+                        this._rootView.fragment_ar_root,
+                        this.getString(R.string.no_camera_permission)
+                    )
+            }
+
+            else -> super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        }
+    }
 
     // -- SurfaceView --
 
-    /**
-     * Configures a SurfaceView from OpenGL
-     */
+    /** Configures a SurfaceView from OpenGL */
     private fun configureSurfaceViewFromOpenGL() {
-        // Set up renderer
+        // DisplayListener
+        this._displayListener = DisplayListenerTools(this.requireContext())
+
+        // Renderer
+        this._renderer = ARCleverRenderer(
+            this.requireContext(),
+            this._displayListener
+        )
+
+        // GLSurfaceView
         with(this._rootView.fragment_ar_surface_view) {
             // Manage Context on pause
             preserveEGLContextOnPause = true
@@ -52,7 +84,7 @@ class ARFragment : BaseFragment() {
             // Create an OpenGL ES 2.0 context
             setEGLContextClientVersion(2)
 
-            // Alpha used for plane blending.
+            // Alpha used for plane blending
             setEGLConfigChooser(8, 8, 8, 8, 16, 0)
 
             // Set the Renderer for drawing on the GLSurfaceView
@@ -68,27 +100,23 @@ class ARFragment : BaseFragment() {
 
     // -- Camera --
 
-    /**
-     * Configures Camera with Camera permission
-     */
+    /** Configures Camera with Camera permission */
     private fun configureCamera() {
-        if (this.hasCameraPermission()) {
+        if (CameraPermissionTools.hasCameraPermission(this@ARFragment))
             this.setupSessionOfAR()
-        }
+        else
+            CameraPermissionTools.requestCameraPermission(this@ARFragment)
     }
 
     // -- AR Core --
 
-    /**
-     * Setups the [Session] of AR
-     */
+    /** Setups the [Session] of AR */
     private fun setupSessionOfAR() {
         var message: String? = null
 
         // Make sure Google Play Services for AR is installed and up to date.
         try {
             // Enable ARCore
-            // See: https://developers.google.com/ar/develop/java/enable-arcore
             if (this._session == null) {
                 val installStatus = ArCoreApk.getInstance()
                     .requestInstall(this.requireActivity(), this._userRequestedInstall)
@@ -97,12 +125,14 @@ class ARFragment : BaseFragment() {
                     ArCoreApk.InstallStatus.INSTALLED -> {
                         // Success, create the AR session
                         this._session = Session(this.requireContext())
+
+                        // Update session into Renderer
+                        this._renderer._session = this._session
                     }
 
                     ArCoreApk.InstallStatus.INSTALL_REQUESTED, null -> {
                         // The current activity pauses and the user is prompted to install
                         // or update Google Play Services for AR.
-
                         // Ensures next invocation of requestInstall() will either return
                         // INSTALLED or throw an exception.
                         this._userRequestedInstall = false
@@ -128,7 +158,7 @@ class ARFragment : BaseFragment() {
         // Manage the exception message
         if (message != null) {
             MessageTools.showMessageWithSnackbar(
-                this._rootView.fragment_a_r_root,
+                this._rootView.fragment_ar_root,
                 message
             )
 
@@ -143,9 +173,7 @@ class ARFragment : BaseFragment() {
         this.manageResumeOfAR()
     }
 
-    /**
-     * Manages the Depth API of AR
-     */
+    /** Manages the Depth API of AR */
     private fun manageDepthAPIOfAR() {
         this._session?.let { session ->
             // Check if Depth API is supported
@@ -161,9 +189,7 @@ class ARFragment : BaseFragment() {
         }
     }
 
-    /**
-     * Manages the resume of AR
-     */
+    /** Manages the resume of AR */
     private fun manageResumeOfAR() {
         this._session?.let { session ->
             // Note that order matters - see the note in manageClosureOfAR method in onPause(),
@@ -172,7 +198,7 @@ class ARFragment : BaseFragment() {
                 session.resume()
             } catch (e: CameraNotAvailableException) {
                 MessageTools.showMessageWithSnackbar(
-                    this._rootView.fragment_a_r_root,
+                    this._rootView.fragment_ar_root,
                     this.getString(R.string.exception_camera_not_available)
                 )
                 this._session = null
@@ -180,17 +206,17 @@ class ARFragment : BaseFragment() {
             }
 
             this._rootView.fragment_ar_surface_view.onResume()
+            this._displayListener.onResume()
         }
     }
 
-    /**
-     * Manages the pause of AR
-     */
+    /** Manages the pause of AR */
     private fun managePauseOfAR() {
         this._session?.let { session ->
             // Note that the order matters - GLSurfaceView is paused first so that it does not try
             // to query the session. If Session is paused before GLSurfaceView, GLSurfaceView may
             // still call session.update() and get a SessionPausedException.
+            this._displayListener.onPause()
             this._rootView.fragment_ar_surface_view.onPause()
             session.pause()
         }

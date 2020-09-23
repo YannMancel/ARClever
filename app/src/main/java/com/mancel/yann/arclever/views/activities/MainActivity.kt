@@ -27,7 +27,7 @@ class MainActivity : BaseActivity() {
 
     override fun getActivityLayout(): Int = R.layout.activity_main
 
-    override fun configureDesign() = this.configureActionBarForNavigation()
+    override fun doOnCreate() = this.configureActionBarForNavigation()
 
     // -- Activity --
 
@@ -38,9 +38,7 @@ class MainActivity : BaseActivity() {
 
     // -- Action bar --
 
-    /**
-     * Configures the Action bar for the navigation
-     */
+    /** Configures the Action bar for the navigation */
     private fun configureActionBarForNavigation() {
         // NavController
         this._navController = this.findNavController(R.id.activity_main_NavHostFragment)

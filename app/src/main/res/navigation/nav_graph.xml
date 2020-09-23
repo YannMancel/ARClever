@@ -13,6 +13,6 @@
         android:id="@+id/aRFragment"
         android:name="com.mancel.yann.arclever.views.fragments.ARFragment"
         android:label="@string/app_name"
-        tools:layout="@layout/fragment_a_r" />
+        tools:layout="@layout/fragment_ar" />
 
 </navigation>

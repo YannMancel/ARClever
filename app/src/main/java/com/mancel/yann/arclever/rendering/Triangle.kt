@@ -1,4 +1,4 @@
-package com.mancel.yann.arclever.opengl
+package com.mancel.yann.arclever.rendering
 
 import android.opengl.GLES20
 import java.nio.ByteBuffer
@@ -8,7 +8,7 @@ import java.nio.FloatBuffer
 /**
  * Created by Yann MANCEL on 11/08/2020.
  * Name of the project: ARClever
- * Name of the package: com.mancel.yann.arclever.opengl
+ * Name of the package: com.mancel.yann.arclever.rendering
  */
 class Triangle {
 
