@@ -20,7 +20,6 @@ object ShaderUtil {
 
     /**
      * Converts a raw text file, saved as a resource, into an OpenGL ES shader.
-     *
      * @param type The type of shader we will be creating.
      * @param filename The filename of the asset file about to be turned into a shader.
      * @param defineValuesMap The #define values to add to the top of the shader source code.
@@ -69,9 +68,7 @@ object ShaderUtil {
         return shader
     }
 
-    /**
-     * Overload of loadGLShader that assumes no additional #define values to add.
-     */
+    /** Overload of loadGLShader that assumes no additional #define values to add */
     @Throws(IOException::class)
     fun loadGLShader(
         tag: String,
@@ -87,7 +84,6 @@ object ShaderUtil {
 
     /**
      * Converts a raw shader file into a string.
-     *
      * @param filename The filename of the shader file about to be turned into a shader.
      * @return The context of the text file, or null in case of error.
      */
@@ -127,7 +123,6 @@ object ShaderUtil {
 
     /**
      * Checks if we've had an error inside of OpenGL ES, and if so what that error is.
-     *
      * @param label Label to report in case of error.
      * @throws RuntimeException If an OpenGL error is detected.
      */

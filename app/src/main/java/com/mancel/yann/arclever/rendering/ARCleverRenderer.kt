@@ -31,6 +31,7 @@ class ARCleverRenderer(
     private val _depthTexture = Texture()
     private val _backgroundRenderer = BackgroundRenderer()
     private val _planeRenderer = PlaneRenderer()
+    private val _pointCloudRenderer = PointCloudRenderer()
 
     // METHODS -------------------------------------------------------------------------------------
 
@@ -47,6 +48,9 @@ class ARCleverRenderer(
             this._depthTexture.createOnGlThread()
             this._backgroundRenderer.createOnGlThread(this._context, this._depthTexture._textureId)
             this._planeRenderer.createOnGlThread(this._context)
+            this._pointCloudRenderer.createOnGlThread(this._context)
+
+
         } catch (e: IOException) {
             Log.e(this.javaClass.simpleName, "Failed to read an asset file", e)
         }
@@ -103,7 +107,7 @@ class ARCleverRenderer(
 
             // Get projection matrix.
             val projectionMatrix = FloatArray(16)
-            camera.getProjectionMatrix(projectionMatrix, 0, 0.1f, 100.0f)
+            camera.getProjectionMatrix(projectionMatrix, 0, 0.1F, 100.0F)
 
             // Get camera matrix and draw.
             val viewMatrix = FloatArray(16)
@@ -115,14 +119,14 @@ class ARCleverRenderer(
             val colorCorrectionRgba = FloatArray(4)
             frame.lightEstimate.getColorCorrection(colorCorrectionRgba, 0)
 
+            // Visualize tracked points.
+            // Use try-with-resources to automatically release the point cloud.
+            val pointCloud = frame!!.acquirePointCloud()
+            this._pointCloudRenderer.update(pointCloud)
+            this._pointCloudRenderer.draw(viewMatrix, projectionMatrix)
 /*
 
-          // Visualize tracked points.
-          // Use try-with-resources to automatically release the point cloud.
-          try (PointCloud pointCloud = frame.acquirePointCloud()) {
-            pointCloudRenderer.update(pointCloud);
-            pointCloudRenderer.draw(viewmtx, projmtx);
-          }
+
 
           // No tracking error at this point. If we detected any plane, then hide the
           // message UI, otherwise show searchingPlane message.
@@ -133,11 +137,11 @@ class ARCleverRenderer(
           }
     */
             // Visualize planes
-//            this._planeRenderer.drawPlanes(
-//                this._session!!.getAllTrackables(Plane.class),
-//                camera.getDisplayOrientedPose(),
-//                projectionMatrix
-//            )
+            this._planeRenderer.drawPlanes(
+                this._session!!.getAllTrackables(Plane::class.java),
+                camera.displayOrientedPose,
+                projectionMatrix
+            )
     /*
           // Visualize anchors created by touch.
           float scaleFactor = 1.0f;
