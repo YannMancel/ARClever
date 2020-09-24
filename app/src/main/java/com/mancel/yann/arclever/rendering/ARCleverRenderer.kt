@@ -7,6 +7,7 @@ import android.util.Log
 import com.google.ar.core.Config
 import com.google.ar.core.Plane
 import com.google.ar.core.Session
+import com.google.ar.core.TrackingState
 import com.mancel.yann.arclever.utils.DisplayListenerTools
 import java.io.IOException
 import javax.microedition.khronos.egl.EGLConfig
@@ -97,13 +98,13 @@ class ARCleverRenderer(
 
 //            // Keep the screen unlocked while tracking, but allow it to lock when tracking stops.
 //            trackingStateHelper.updateKeepScreenOnFlag(camera.getTrackingState());
-//
-//            // If not tracking, don't draw 3D objects, show tracking failure reason instead.
-//            if (camera.getTrackingState() == TrackingState.PAUSED) {
+
+            // If not tracking, don't draw 3D objects, show tracking failure reason instead.
+            if (camera.trackingState == TrackingState.PAUSED) {
 //                messageSnackbarHelper.showMessage(
 //                    this, TrackingStateHelper.getTrackingFailureReasonString(camera));
-//                return;
-//            }
+                return
+            }
 
             // Get projection matrix.
             val projectionMatrix = FloatArray(16)
@@ -124,18 +125,15 @@ class ARCleverRenderer(
             val pointCloud = frame!!.acquirePointCloud()
             this._pointCloudRenderer.update(pointCloud)
             this._pointCloudRenderer.draw(viewMatrix, projectionMatrix)
-/*
 
+            // No tracking error at this point. If we detected any plane, then hide the
+            // message UI, otherwise show searchingPlane message.
+            if (hasTrackingPlane()) {
+//                messageSnackbarHelper.hide(this);
+            } else {
+//                messageSnackbarHelper.showMessage(this, SEARCHING_PLANE_MESSAGE);
+            }
 
-
-          // No tracking error at this point. If we detected any plane, then hide the
-          // message UI, otherwise show searchingPlane message.
-          if (hasTrackingPlane()) {
-            messageSnackbarHelper.hide(this);
-          } else {
-            messageSnackbarHelper.showMessage(this, SEARCHING_PLANE_MESSAGE);
-          }
-    */
             // Visualize planes
             this._planeRenderer.drawPlanes(
                 this._session!!.getAllTrackables(Plane::class.java),
@@ -160,7 +158,6 @@ class ARCleverRenderer(
           }
  */
 
-
         } catch ( t: Throwable) {
             // Avoid crashing the application due to unhandled exceptions.
             Log.e(this.javaClass.simpleName, "Exception on the OpenGL thread", t)
@@ -170,6 +167,18 @@ class ARCleverRenderer(
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         this._displayListener.onSurfaceChanged(width, height)
         GLES20.glViewport(0, 0, width, height)
+    }
+
+    // -- Planes --
+
+    /** Checks if we detected at least one plane. */
+    private fun hasTrackingPlane(): Boolean {
+        for (plane in this._session!!.getAllTrackables(Plane::class.java)) {
+            if (plane.trackingState == TrackingState.TRACKING) {
+                return true
+            }
+        }
+        return false
     }
 
     // -- Shader --

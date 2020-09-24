@@ -13,7 +13,6 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.math.cos
 import kotlin.math.max
@@ -177,17 +176,16 @@ class PlaneRenderer {
     fun drawPlanes(allPlanes: Collection<Plane>, cameraPose: Pose, cameraPerspective: FloatArray) {
         // Planes must be sorted by distance from camera so that we draw closer planes first, and
         // they occlude the farther planes.
-        val sortedPlanes = ArrayList<SortablePlane>()
+        val sortedPlanes = mutableListOf<SortablePlane>()
 
         for (plane in allPlanes) {
-            if (plane.trackingState != TrackingState.TRACKING || plane.subsumedBy != null) {
-                continue
-            }
+            if (plane.trackingState != TrackingState.TRACKING || plane.subsumedBy != null) continue
 
             val distance = this.calculateDistanceToPlane(plane.centerPose, cameraPose)
-            if (distance < 0) { // Plane is back-facing.
-                continue
-            }
+
+            // Plane is back-facing
+            if (distance < 0) continue
+
             sortedPlanes.add(SortablePlane(distance, plane))
         }
 
@@ -212,8 +210,10 @@ class PlaneRenderer {
         // Additive blending, masked by alpha channel, clearing alpha channel.
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFuncSeparate(
-            GLES20.GL_DST_ALPHA, GLES20.GL_ONE, // RGB (src, dest)
-            GLES20.GL_ZERO, GLES20.GL_ONE_MINUS_SRC_ALPHA // ALPHA (src, dest)
+            // RGB (src, dest)
+            GLES20.GL_DST_ALPHA, GLES20.GL_ONE,
+            // ALPHA (src, dest)
+            GLES20.GL_ZERO, GLES20.GL_ONE_MINUS_SRC_ALPHA
         )
 
         // Set up the shader.
@@ -296,13 +296,9 @@ class PlaneRenderer {
         // Get transformed Y axis of plane's coordinate system.
         planePose.getTransformedAxis(1, 1.0F, normal, 0)
         // Compute dot product of plane's normal with vector from camera to plane center.
-
-        val result =
-            (cameraX - planePose.tx()) * normal[0]
-            + (cameraY - planePose.ty()) * normal[1]
-            + (cameraZ - planePose.tz()) * normal[2]
-
-        return result
+        return (cameraX - planePose.tx()) * normal[0] +
+               (cameraY - planePose.ty()) * normal[1] +
+               (cameraZ - planePose.tz()) * normal[2]
     }
 
     /** Updates the plane model transform matrix and extents. */
