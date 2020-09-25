@@ -1,15 +1,24 @@
 package com.mancel.yann.arclever.views.fragments
 
+import android.app.Activity
+import android.content.Context
 import android.content.pm.PackageManager
 import android.opengl.GLSurfaceView
-import com.google.ar.core.*
+import android.view.View
+import androidx.lifecycle.*
+import com.google.ar.core.ArCoreApk
+import com.google.ar.core.Config
+import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
 import com.mancel.yann.arclever.R
 import com.mancel.yann.arclever.rendering.ARCleverRenderer
+import com.mancel.yann.arclever.states.ARState
 import com.mancel.yann.arclever.utils.CameraPermissionTools
 import com.mancel.yann.arclever.utils.DisplayListenerTools
 import com.mancel.yann.arclever.utils.MessageTools
+import com.mancel.yann.arclever.utils.doOnUiThreadWhenResumed
 import kotlinx.android.synthetic.main.fragment_ar.view.*
+import kotlinx.coroutines.Dispatchers
 
 /**
  * Created by Yann MANCEL on 08/08/2020.
@@ -27,6 +36,10 @@ class ARFragment : BaseFragment() {
 
     private var _session: Session? = null
     private var _userRequestedInstall = true
+
+    private var _isSearchingSurfaceMode = false
+    private var _isTrackingPlaneSuccessMode = false
+    private var _lastReasonOfTrackingFailureMode: String? = null
 
     // METHODS -------------------------------------------------------------------------------------
 
@@ -71,10 +84,7 @@ class ARFragment : BaseFragment() {
         this._displayListener = DisplayListenerTools(this.requireContext())
 
         // Renderer
-        this._renderer = ARCleverRenderer(
-            this.requireContext(),
-            this._displayListener
-        )
+        this._renderer = this.getRenderer(this.requireContext(), this._displayListener)
 
         // GLSurfaceView
         with(this._rootView.fragment_ar_surface_view) {
@@ -95,6 +105,96 @@ class ARFragment : BaseFragment() {
 
             // Optimisation
             setWillNotDraw(false)
+        }
+    }
+
+    // -- Renderer --
+
+    /** Get an [ARCleverRenderer] */
+    private fun getRenderer(
+        context: Context,
+        displayListener: DisplayListenerTools
+    ) : ARCleverRenderer {
+        return ARCleverRenderer(context, displayListener) { state ->
+            when (state) {
+                ARState.SearchingPlane -> this.handleSearchingPlaneState()
+                ARState.TrackingPlaneSuccess -> this.handleTrackingPlaneSuccessState()
+                is ARState.TrackingFailure -> this.handleTrackingFailureState(state)
+            }
+        }
+    }
+
+    // -- State --
+
+    /**
+     * Handles [ARState.SearchingPlane] from [ARCleverRenderer.onDrawFrame].
+     * This method is called in background thread.
+     * To interact with UI, we must go in UIThread, either with
+     * [Activity.runOnUiThread] from [Activity] or
+     * [LifecycleOwner.lifecycleScope] with [Dispatchers.Main] from Coroutines.
+     */
+    private fun handleSearchingPlaneState() {
+        // To avoid the multiple call
+        if (!this._isSearchingSurfaceMode) {
+            this.doOnUiThreadWhenResumed {
+                with(this@ARFragment._rootView.fragment_ar_searching_message) {
+                    visibility = View.VISIBLE
+                    text = this@ARFragment.requireContext().getString(R.string.searching_surfaces)
+                    setBackgroundColor(
+                        this@ARFragment.requireContext().getColor(R.color.colorSearchingSurfaces)
+                    )
+                }
+            }
+            this._isSearchingSurfaceMode = true
+            this._isTrackingPlaneSuccessMode = false
+            this._lastReasonOfTrackingFailureMode = null
+        }
+    }
+
+    /**
+     * Handles [ARState.TrackingPlaneSuccess] from [ARCleverRenderer.onDrawFrame].
+     * This method is called in background thread.
+     * To interact with UI, we must go in UIThread, either with
+     * [Activity.runOnUiThread] from [Activity] or
+     * [LifecycleOwner.lifecycleScope] with [Dispatchers.Main] from Coroutines.
+     */
+    private fun handleTrackingPlaneSuccessState() {
+        // To avoid the multiple call
+        if (!this._isTrackingPlaneSuccessMode) {
+            this.doOnUiThreadWhenResumed {
+                this@ARFragment._rootView.fragment_ar_searching_message.visibility = View.GONE
+            }
+            this._isTrackingPlaneSuccessMode = true
+            this._isSearchingSurfaceMode = false
+            this._lastReasonOfTrackingFailureMode = null
+        }
+    }
+
+    /**
+     * Handles [ARState.TrackingFailure] from [ARCleverRenderer.onDrawFrame].
+     * This method is called in background thread.
+     * To interact with UI, we must go in UIThread, either with
+     * [Activity.runOnUiThread] from [Activity] or
+     * [LifecycleOwner.lifecycleScope] with [Dispatchers.Main] from Coroutines.
+     */
+    private fun handleTrackingFailureState(state: ARState.TrackingFailure) {
+        // To avoid the multiple call
+        if (this._lastReasonOfTrackingFailureMode == null
+            || this._lastReasonOfTrackingFailureMode != state._reason) {
+            this.doOnUiThreadWhenResumed {
+                with(this@ARFragment._rootView.fragment_ar_searching_message) {
+                    if (state._reason.isNotEmpty()) {
+                        visibility = View.VISIBLE
+                        text = state._reason
+                        setBackgroundColor(
+                            this@ARFragment.requireContext().getColor(R.color.colorTrackingFailure)
+                        )
+                    }
+                }
+            }
+            this._lastReasonOfTrackingFailureMode = state._reason
+            this._isSearchingSurfaceMode = false
+            this._isTrackingPlaneSuccessMode = false
         }
     }
 

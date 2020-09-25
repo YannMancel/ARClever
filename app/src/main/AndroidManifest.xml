@@ -9,7 +9,7 @@
 
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     <uses-feature android:name="android.hardware.camera.ar" android:required="true" />
-    <uses-feature android:name="com.google.ar.core.depth" />
+    <uses-feature android:name="com.google.ar.core.depth" android:value="optional" />
 
     <application
         android:allowBackup="true"

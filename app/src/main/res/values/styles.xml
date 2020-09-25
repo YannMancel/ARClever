@@ -8,4 +8,11 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <!-- *********************************** TextView ****************************************** -->
+
+    <!-- TextView style for Searching message -->
+    <style name="TextViewStyleForSearchingMessage" parent="@style/TextAppearance.MaterialComponents.Body2">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
 </resources>

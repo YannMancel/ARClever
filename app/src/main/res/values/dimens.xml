@@ -5,4 +5,7 @@
     <!-- Margin -->
     <dimen name="margin_normal">16dp</dimen>
 
+    <!-- Padding -->
+    <dimen name="padding_little">8dp</dimen>
+
 </resources>

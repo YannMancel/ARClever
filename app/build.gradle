@@ -52,6 +52,10 @@ dependencies {
 
     implementation 'de.javagl:obj:0.2.1'
 
+    // Kotlin Coroutines
+    implementation libs.coroutines_core
+    implementation libs.coroutines_android
+
     // TESTS ---------------------------------------------------------------------------------------
 
     testImplementation 'junit:junit:4.12'

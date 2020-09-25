@@ -27,6 +27,7 @@
     * [Navigation](https://developer.android.com/guide/navigation/)
 * [Library Material Components](https://github.com/material-components/material-components-android)
 * [Library ARCore](https://developers.google.com/ar/develop/java/quickstart)
+* [Library Coroutines](https://github.com/Kotlin/kotlinx.coroutines)
 
 
 ## Troubleshooting

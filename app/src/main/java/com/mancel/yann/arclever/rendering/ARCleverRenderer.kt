@@ -8,7 +8,9 @@ import com.google.ar.core.Config
 import com.google.ar.core.Plane
 import com.google.ar.core.Session
 import com.google.ar.core.TrackingState
+import com.mancel.yann.arclever.states.ARState
 import com.mancel.yann.arclever.utils.DisplayListenerTools
+import com.mancel.yann.arclever.utils.TrackingStateTools
 import java.io.IOException
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -22,7 +24,8 @@ import javax.microedition.khronos.opengles.GL10
  */
 class ARCleverRenderer(
     private val _context: Context,
-    private val _displayListener: DisplayListenerTools
+    private val _displayListener: DisplayListenerTools,
+    private val _actionOnARState: (ARState) -> Unit
 ) : GLSurfaceView.Renderer {
 
     // FIELDS --------------------------------------------------------------------------------------
@@ -40,7 +43,7 @@ class ARCleverRenderer(
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         // Set the background frame color
-        GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f)
+        GLES20.glClearColor(0.1F, 0.1F, 0.1F, 1.0F)
 
         // Prepare the rendering objects. This involves reading shaders,
         // so may throw an IOException.
@@ -48,9 +51,10 @@ class ARCleverRenderer(
             // Create the texture and pass it to ARCore session to be filled during update()
             this._depthTexture.createOnGlThread()
             this._backgroundRenderer.createOnGlThread(this._context, this._depthTexture._textureId)
+            this._session!!.setCameraTextureName(this._backgroundRenderer._cameraTextureId)
+
             this._planeRenderer.createOnGlThread(this._context)
             this._pointCloudRenderer.createOnGlThread(this._context)
-
 
         } catch (e: IOException) {
             Log.e(this.javaClass.simpleName, "Failed to read an asset file", e)
@@ -69,8 +73,6 @@ class ARCleverRenderer(
         this._displayListener.updateSessionIfNeeded(this._session!!)
 
         try {
-            this._session!!.setCameraTextureName(this._backgroundRenderer._cameraTextureId)
-
             // Obtain the current frame from ARSession. When the configuration is set to
             // UpdateMode.BLOCKING (it is by default), this will throttle the rendering to the
             // camera frame rate.
@@ -101,8 +103,11 @@ class ARCleverRenderer(
 
             // If not tracking, don't draw 3D objects, show tracking failure reason instead.
             if (camera.trackingState == TrackingState.PAUSED) {
-//                messageSnackbarHelper.showMessage(
-//                    this, TrackingStateHelper.getTrackingFailureReasonString(camera));
+                this._actionOnARState(
+                    ARState.TrackingFailure(
+                        TrackingStateTools.getTrackingFailureReasonString(camera, this._context)
+                    )
+                )
                 return
             }
 
@@ -128,11 +133,10 @@ class ARCleverRenderer(
 
             // No tracking error at this point. If we detected any plane, then hide the
             // message UI, otherwise show searchingPlane message.
-            if (hasTrackingPlane()) {
-//                messageSnackbarHelper.hide(this);
-            } else {
-//                messageSnackbarHelper.showMessage(this, SEARCHING_PLANE_MESSAGE);
-            }
+            if (hasTrackingPlane())
+                this._actionOnARState(ARState.TrackingPlaneSuccess)
+            else
+                this._actionOnARState(ARState.SearchingPlane)
 
             // Visualize planes
             this._planeRenderer.drawPlanes(

@@ -6,4 +6,7 @@
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
 
+    <color name="colorSearchingSurfaces">#B36200EE</color>
+    <color name="colorTrackingFailure">#B2CC0000</color>
+
 </resources>

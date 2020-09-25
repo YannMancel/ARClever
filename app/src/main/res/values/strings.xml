@@ -2,6 +2,9 @@
 
     <string name="app_name" translatable="false">ARClever</string>
 
+    <!-- fragment_ar.xml -->
+    <string name="searching_surfaces">Searching for surfaces…</string>
+
     <!-- ARFragment.kt -->
     <string name="no_camera_permission">No camera permission</string>
     <string name="exception_declined_installation">Please install ARCore</string>
@@ -11,5 +14,25 @@
     <string name="exception_not_supported">This device does not support AR</string>
     <string name="exception_failed_session">Failed to create AR session</string>
     <string name="exception_camera_not_available">Camera not available. Try restarting the app.</string>
+
+    <!-- TrackingStateTools.kt -->
+    <string name="error_bad_state">Tracking lost due to bad internal state. Please try restarting the AR experience.</string>
+    <string name="error_insufficient_light">Too dark. Try moving to a well-lit area.</string>
+    <string name="error_excessive_motion">Moving too fast. Slow down.</string>
+    <string name="error_insufficient_features">Can\'t find anything. Aim device at a surface with more texture or color.</string>
+    <string name="error_camera_unavailable">Another app is using the camera. Tap on this app or try closing the other one.</string>
+    <string name="error_other_reason">Unknown tracking failure reason: %1$s.</string>
+
+    <!-- These strings will be removed -->
+    <string translatable="false" name="depth_use_explanation">When Depth is enabled on supported devices, virtual objects adapt to the environment by blending in with the real world.</string>
+    <string translatable="false" name="button_text_enable_depth">Enable</string>
+    <string translatable="false" name="button_text_disable_depth">Disable</string>
+    <string translatable="false" name="options_title_with_depth">Your device supports depth</string>
+    <string translatable="false" name="options_title_without_depth">Your device does not support depth</string>
+    <string translatable="false" name="done">Done</string>
+    <string-array translatable="false" name="depth_options_array">
+        <item>Enable depth</item>
+        <item>Show depth map</item>
+    </string-array>
 
 </resources>
